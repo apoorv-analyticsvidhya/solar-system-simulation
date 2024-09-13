@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Solar System Simulation</title>
+    <style>
+        /* Canvas styling */
+        #simulationCanvas {
+            background-color: #000;
+            display: block;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+        }
+        /* Control panel styling */
+        #controls {
+            width: 800px;
+            margin: 20px auto;
+            color: #000;
+            font-family: Arial, sans-serif;
+        }
+        #controls table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        #controls td {
+            padding: 5px;
+            vertical-align: middle;
+        }
+        #controls label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        h2 {
+            text-align: center;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <h2>Solar System Simulation</h2>
+    <canvas id="simulationCanvas" width="800" height="800"></canvas>
+
+    <div id="controls">
+        <table>
+            <!-- Sun Controls -->
+            <tr>
+                <td colspan="2"><strong>Sun</strong></td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Mass</label>
+                    <input type="range" id="sunMass" min="1" max="100" value="100" step="1">
+                </td>
+                <td>
+                    <label>Radius</label>
+                    <input type="range" id="sunRadius" min="10" max="50" value="30" step="1">
+                </td>
+            </tr>
+            <!-- Planets Controls -->
+            <!-- Mercury -->
+            <tr>
+                <td colspan="2"><strong>Mercury</strong></td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Mass</label>
+                    <input type="range" id="MercuryMass" min="0.01" max="1" value="0.055" step="0.01">
+                </td>
+                <td>
+                    <label>Radius</label>
+                    <input type="range" id="MercuryRadius" min="2" max="5" value="3" step="0.1">
+                </td>
+            </tr>
+            <!-- Venus -->
+            <tr>
+                <td colspan="2"><strong>Venus</strong></td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Mass</label>
+                    <input type="range" id="VenusMass" min="0.01" max="1" value="0.815" step="0.01">
+                </td>
+                <td>
+                    <label>Radius</label>
+                    <input type="range" id="VenusRadius" min="2" max="6" value="4" step="0.1">
+                </td>
+            </tr>
+            <!-- Earth -->
+            <tr>
+                <td colspan="2"><strong>Earth</strong></td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Mass</label>
+                    <input type="range" id="EarthMass" min="0.01" max="1" value="1" step="0.01">
+                </td>
+                <td>
+                    <label>Radius</label>
+                    <input type="range" id="EarthRadius" min="2" max="6" value="4" step="0.1">
+                </td>
+            </tr>
+            <!-- Mars -->
+            <tr>
+                <td colspan="2"><strong>Mars</strong></td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Mass</label>
+                    <input type="range" id="MarsMass" min="0.01" max="1" value="0.107" step="0.01">
+                </td>
+                <td>
+                    <label>Radius</label>
+                    <input type="range" id="MarsRadius" min="2" max="5" value="3" step="0.1">
+                </td>
+            </tr>
+            <!-- Jupiter -->
+            <tr>
+                <td colspan="2"><strong>Jupiter</strong></td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Mass</label>
+                    <input type="range" id="JupiterMass" min="1" max="318" value="318" step="1">
+                </td>
+                <td>
+                    <label>Radius</label>
+                    <input type="range" id="JupiterRadius" min="5" max="15" value="10" step="0.1">
+                </td>
+            </tr>
+            <!-- Saturn -->
+            <tr>
+                <td colspan="2"><strong>Saturn</strong></td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Mass</label>
+                    <input type="range" id="SaturnMass" min="1" max="95" value="95" step="1">
+                </td>
+                <td>
+                    <label>Radius</label>
+                    <input type="range" id="SaturnRadius" min="5" max="14" value="9" step="0.1">
+                </td>
+            </tr>
+            <!-- Uranus -->
+            <tr>
+                <td colspan="2"><strong>Uranus</strong></td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Mass</label>
+                    <input type="range" id="UranusMass" min="1" max="15" value="14" step="0.1">
+                </td>
+                <td>
+                    <label>Radius</label>
+                    <input type="range" id="UranusRadius" min="4" max="10" value="7" step="0.1">
+                </td>
+            </tr>
+            <!-- Neptune -->
+            <tr>
+                <td colspan="2"><strong>Neptune</strong></td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Mass</label>
+                    <input type="range" id="NeptuneMass" min="1" max="17" value="17" step="0.1">
+                </td>
+                <td>
+                    <label>Radius</label>
+                    <input type="range" id="NeptuneRadius" min="4" max="10" value="7" step="0.1">
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Move the script tag to the end of the body -->
+    <script>
+        window.onload = function() {
+            const canvas = document.getElementById('simulationCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // Planet data
+            const G = 0.1; // Gravitational constant for simulation scaling
+
+            class CelestialBody {
+                constructor(name, color, orbitalRadius, size, massInputId, radiusInputId, retrograde = false, axialTilt = 0) {
+                    this.name = name;
+                    this.color = color;
+                    this.orbitalRadius = orbitalRadius;
+                    this.size = size;
+                    this.massInputId = massInputId;
+                    this.radiusInputId = radiusInputId;
+                    this.mass = 1; // Initialize with default value
+                    this.radius = size; // Initialize with default size
+                    this.angle = Math.random() * 2 * Math.PI;
+                    this.speed = 0;
+                    this.highlight = false;
+                    this.retrograde = retrograde;
+                    this.axialTilt = axialTilt;
+                    this.rotationAngle = 0;
+                    this.rotationSpeed = 0.05; // Adjust as needed
+                }
+
+                update(sunMass) {
+                    // Update mass and radius from sliders
+                    this.mass = parseFloat(document.getElementById(this.massInputId).value);
+                    this.radius = parseFloat(document.getElementById(this.radiusInputId).value);
+
+                    // Calculate orbital speed
+                    this.speed = Math.sqrt((G * sunMass) / this.orbitalRadius);
+                    this.angle -= this.speed / 50; // Decrease angle for counterclockwise motion
+
+                    // Update rotation angle
+                    if (this.retrograde) {
+                        this.rotationAngle += this.rotationSpeed;
+                    } else {
+                        this.rotationAngle -= this.rotationSpeed;
+                    }
+                }
+
+                draw() {
+                    // Draw orbit path
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#555'; // Gray color for orbit
+                    ctx.lineWidth = 1;
+                    ctx.arc(canvas.width / 2, canvas.height / 2, this.orbitalRadius, 0, 2 * Math.PI);
+                    ctx.stroke();
+
+                    // Calculate position
+                    const x = canvas.width / 2 + this.orbitalRadius * Math.cos(this.angle);
+                    const y = canvas.height / 2 + this.orbitalRadius * Math.sin(this.angle);
+
+                    // Draw planet
+                    ctx.beginPath();
+                    ctx.fillStyle = this.color;
+                    ctx.arc(x, y, this.radius, 0, 2 * Math.PI);
+                    ctx.fill();
+
+                    // Draw label
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '12px Arial';
+                    ctx.fillText(this.name, x - this.radius, y - this.radius - 5);
+
+                    // Draw rotation marker
+                    ctx.save();
+                    ctx.translate(x, y);
+
+                    // Apply axial tilt if any
+                    if (this.axialTilt !== 0) {
+                        ctx.rotate((this.axialTilt * Math.PI) / 180);
+                    }
+
+                    // Rotate marker around planet
+                    ctx.rotate(this.rotationAngle);
+
+                    // Draw marker
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#fff';
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(0, -this.radius - 3);
+                    ctx.stroke();
+
+                    ctx.restore();
+
+                    // Draw highlight if necessary
+                    if (this.highlight) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = 'red';
+                        ctx.lineWidth = 2;
+                        const rectSize = this.radius * 2 + 4; // 4 pixels padding
+                        ctx.rect(x - this.radius - 2, y - this.radius - 2, rectSize, rectSize);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Initialize Sun
+            const sun = {
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                massInputId: 'sunMass',
+                radiusInputId: 'sunRadius',
+                mass: 1, // Initialize with default value
+                radius: 30, // Initialize with default size
+                color: '#FFA500',
+                highlight: false
+            };
+
+            // Initialize Planets
+            const planets = [
+                new CelestialBody('Mercury', '#C0C0C0', 50, 3, 'MercuryMass', 'MercuryRadius'),
+                new CelestialBody('Venus', '#FFD700', 80, 4, 'VenusMass', 'VenusRadius', true), // Retrograde rotation
+                new CelestialBody('Earth', '#0000FF', 110, 4, 'EarthMass', 'EarthRadius'),
+                new CelestialBody('Mars', '#FF4500', 140, 3, 'MarsMass', 'MarsRadius'),
+                new CelestialBody('Jupiter', '#D2691E', 180, 7, 'JupiterMass', 'JupiterRadius'),
+                new CelestialBody('Saturn', '#DAA520', 220, 6, 'SaturnMass', 'SaturnRadius'),
+                new CelestialBody('Uranus', '#40E0D0', 260, 5, 'UranusMass', 'UranusRadius', true, 98), // Retrograde rotation and axial tilt
+                new CelestialBody('Neptune', '#00008B', 300, 5, 'NeptuneMass', 'NeptuneRadius')
+            ];
+
+            // Function to add event listeners to inputs
+            function addInputListeners() {
+                // Add listeners for Sun
+                const sunMassInput = document.getElementById(sun.massInputId);
+                const sunRadiusInput = document.getElementById(sun.radiusInputId);
+
+                sunMassInput.addEventListener('input', () => {
+                    sun.highlight = true;
+                    setTimeout(() => {
+                        sun.highlight = false;
+                    }, 2000);
+                });
+
+                sunRadiusInput.addEventListener('input', () => {
+                    sun.highlight = true;
+                    setTimeout(() => {
+                        sun.highlight = false;
+                    }, 2000);
+                });
+
+                // Add listeners for planets
+                planets.forEach(planet => {
+                    const massInput = document.getElementById(planet.massInputId);
+                    const radiusInput = document.getElementById(planet.radiusInputId);
+
+                    massInput.addEventListener('input', () => {
+                        planet.highlight = true;
+                        setTimeout(() => {
+                            planet.highlight = false;
+                        }, 2000);
+                    });
+
+                    radiusInput.addEventListener('input', () => {
+                        planet.highlight = true;
+                        setTimeout(() => {
+                            planet.highlight = false;
+                        }, 2000);
+                    });
+                });
+            }
+
+            // Call the function to add listeners
+            addInputListeners();
+
+            // Update function
+            function update() {
+                // Update Sun mass and radius
+                sun.mass = parseFloat(document.getElementById(sun.massInputId).value);
+                sun.radius = parseFloat(document.getElementById(sun.radiusInputId).value);
+
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Draw Sun
+                ctx.beginPath();
+                ctx.fillStyle = sun.color;
+                ctx.arc(sun.x, sun.y, sun.radius, 0, 2 * Math.PI);
+                ctx.fill();
+
+                // Draw Sun label
+                ctx.fillStyle = '#fff';
+                ctx.font = '14px Arial';
+                ctx.fillText('Sun', sun.x - sun.radius / 2, sun.y - sun.radius - 10);
+
+                // Draw highlight around Sun if necessary
+                if (sun.highlight) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = 'red';
+                    ctx.lineWidth = 2;
+                    const rectSize = sun.radius * 2 + 4;
+                    ctx.rect(sun.x - sun.radius - 2, sun.y - sun.radius - 2, rectSize, rectSize);
+                    ctx.stroke();
+                }
+
+                // Update and draw planets
+                planets.forEach(planet => {
+                    planet.update(sun.mass);
+                    planet.draw();
+                });
+
+                requestAnimationFrame(update);
+            }
+
+            // Start the simulation
+            update();
+        };
+    </script>
+</body>
+</html>
